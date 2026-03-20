@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ao3-scraper
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: AO3_USERNAME
+        sync: false          # Set manually in Render dashboard
+      - key: AO3_PASSWORD
+        sync: false          # Set manually in Render dashboard
+      - key: SCRAPER_SECRET
+        sync: false          # Shared secret — also set in Vercel
+      - key: ALLOWED_ORIGINS
+        sync: false          # e.g. https://your-app.vercel.app
