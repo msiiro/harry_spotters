@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from('books')
-    .select('*, profiles(username, display_name, avatar_color)')
+    .select('*')
     .order('created_at', { ascending: false })
 
   if (status && status !== 'all') query = query.eq('reading_status', status)

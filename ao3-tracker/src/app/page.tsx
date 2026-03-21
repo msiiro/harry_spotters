@@ -120,7 +120,7 @@ export default function Home() {
             {/* Logo */}
             <div>
               <h1 className="font-display" style={{ fontSize: 26, fontWeight: 700, color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>
-                Fic Shelf
+                The Vanishing Cabinet
               </h1>
               <p style={{ fontSize: 11, color: 'var(--ink-faint)', margin: '1px 0 0', fontFamily: 'DM Mono', letterSpacing: '0.06em' }}>
                 AO3 READING TRACKER
