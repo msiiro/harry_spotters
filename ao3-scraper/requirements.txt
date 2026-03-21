@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 AO3==2.2.6
+=======
+ao3-api==2.3.1
+>>>>>>> 9bd4947 (initial commit)
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 pydantic==2.9.2

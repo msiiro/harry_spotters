@@ -1,0 +1,12 @@
+# ao3-tracker
+ao3-tracker/node_modules/
+ao3-tracker/.next/
+
+# ao3-scraper
+ao3-scraper/__pycache__/
+ao3-scraper/*.pyc
+ao3-scraper/.env
+
+# Next.js
+.env.local
+.env
