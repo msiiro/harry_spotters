@@ -1,6 +1,7 @@
 'use client'
 
 import type { Book } from '@/lib/supabase'
+import Avatar from './Avatar'
 
 const STATUS_CLASSES: Record<string, string> = {
   want_to_read: 'status-want',
@@ -34,7 +35,7 @@ function Stars({ rating }: { rating: number | null }) {
   )
 }
 
-export default function BookCard({ book, onClick }: { book: Book; onClick: () => void }) {
+export default function BookCard({ book, onClick }: { book: Book & { profiles?: { username: string; display_name: string | null; avatar_color: string } }; onClick: () => void }) {
   const ratingColor = RATING_COLORS[book.ao3_rating || ''] || '#999'
   const wordCountDisplay = book.word_count
     ? book.word_count >= 100000 ? `${(book.word_count / 1000).toFixed(0)}K words`
@@ -118,6 +119,16 @@ export default function BookCard({ book, onClick }: { book: Book; onClick: () =>
         </div>
         <Stars rating={book.your_rating} />
       </div>
+
+      {/* User attribution (everyone view) */}
+      {book.profiles && (
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Avatar username={book.profiles.username} displayName={book.profiles.display_name} color={book.profiles.avatar_color} size={18} />
+          <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: 'DM Mono' }}>
+            {book.profiles.display_name || book.profiles.username}
+          </span>
+        </div>
+      )}
 
       {/* Your tags */}
       {book.your_tags && book.your_tags.length > 0 && (

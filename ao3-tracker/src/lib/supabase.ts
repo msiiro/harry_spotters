@@ -7,10 +7,19 @@ export const supabase = createClient(supabaseUrl, supabaseKey)
 
 export type ReadingStatus = 'want_to_read' | 'reading' | 'finished' | 'dropped'
 
+export interface Profile {
+  id: string
+  created_at: string
+  username: string
+  display_name: string | null
+  avatar_color: string
+}
+
 export interface Book {
   id: string
   created_at: string
   updated_at: string
+  user_id: string | null
   // AO3 scraped
   ao3_id: string
   ao3_url: string
@@ -33,6 +42,7 @@ export interface Book {
   kudos: number | null
   bookmarks: number | null
   hits: number | null
+  comments: number | null
   // Personal
   your_rating: number | null
   your_tags: string[] | null
@@ -40,6 +50,40 @@ export interface Book {
   reading_status: ReadingStatus
   notes: string | null
   recommended_by: string | null
+}
+
+export interface ActivityItem {
+  id: string
+  created_at: string
+  updated_at: string
+  ao3_id: string
+  ao3_url: string
+  title: string
+  author: string | null
+  fandom: string[] | null
+  word_count: number | null
+  status: string | null
+  reading_status: ReadingStatus
+  your_rating: number | null
+  user_id: string
+  username: string
+  display_name: string | null
+  avatar_color: string
+  activity_type: 'finished' | 'added'
+}
+
+export interface WorkRating {
+  ao3_id: string
+  title: string
+  author: string | null
+  your_rating: number
+  reading_status: ReadingStatus
+  date_read: string | null
+  notes: string | null
+  user_id: string
+  username: string
+  display_name: string | null
+  avatar_color: string
 }
 
 export interface ScrapedWork {
@@ -64,4 +108,5 @@ export interface ScrapedWork {
   kudos: number | null
   bookmarks: number | null
   hits: number | null
+  comments: number | null
 }
