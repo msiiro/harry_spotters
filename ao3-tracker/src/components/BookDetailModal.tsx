@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import type { Book, ReadingStatus } from '@/lib/supabase'
+import { useState, useEffect } from 'react'
+import type { Book, ReadingStatus, WorkRating } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth'
+import { authFetch } from '@/lib/api'
+import Avatar from './Avatar'
 
 interface Props {
   book: Book
@@ -16,7 +19,6 @@ const STATUS_OPTIONS: { value: ReadingStatus; label: string }[] = [
   { value: 'finished', label: 'Finished' },
   { value: 'dropped', label: 'Dropped' },
 ]
-
 const STATUS_LABELS: Record<string, string> = {
   want_to_read: 'Want to Read', reading: 'Reading', finished: 'Finished', dropped: 'Dropped',
 }
@@ -24,7 +26,7 @@ const STATUS_CLASSES: Record<string, string> = {
   want_to_read: 'status-want', reading: 'status-reading', finished: 'status-finished', dropped: 'status-dropped',
 }
 
-function TagList({ tags, className }: { tags: string[] | null | undefined, className?: string }) {
+function TagList({ tags, className }: { tags: string[] | null | undefined; className?: string }) {
   if (!tags || tags.length === 0) return null
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
@@ -44,7 +46,20 @@ function StatRow({ label, value }: { label: string; value: React.ReactNode }) {
   )
 }
 
+function MiniStars({ rating }: { rating: number }) {
+  return (
+    <span>
+      {[1,2,3,4,5].map(i => (
+        <span key={i} style={{ fontSize: 12, color: rating >= i ? 'var(--accent)' : 'var(--rule-dark)' }}>★</span>
+      ))}
+    </span>
+  )
+}
+
 export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }: Props) {
+  const { user } = useAuth()
+  const isOwner = user?.id === book.user_id
+
   const [editing, setEditing] = useState(false)
   const [yourRating, setYourRating] = useState(book.your_rating || 0)
   const [hoverRating, setHoverRating] = useState(0)
@@ -56,14 +71,23 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [otherRatings, setOtherRatings] = useState<WorkRating[]>([])
+
+  useEffect(() => {
+    fetch(`/api/ratings?ao3_id=${book.ao3_id}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data))
+          setOtherRatings(data.filter(r => r.user_id !== user?.id))
+      })
+  }, [book.ao3_id, user?.id])
 
   const handleSave = async () => {
     setSaving(true)
     const yourTags = yourTagsInput.split(',').map(s => s.trim()).filter(Boolean)
     try {
-      const res = await fetch(`/api/books/${book.id}`, {
+      const res = await authFetch(`/api/books/${book.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           your_rating: yourRating || null,
           your_tags: yourTags.length ? yourTags : null,
@@ -80,24 +104,19 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
 
   const handleDelete = async () => {
     setDeleting(true)
-    await fetch(`/api/books/${book.id}`, { method: 'DELETE' })
+    await authFetch(`/api/books/${book.id}`, { method: 'DELETE' })
     onDeleted(book.id)
   }
 
   const wordCountDisplay = book.word_count
-    ? book.word_count >= 1000 ? `${book.word_count.toLocaleString()} words` : `${book.word_count} words`
+    ? book.word_count.toLocaleString() + ' words'
     : '—'
 
   return (
     <div className="modal-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div style={{
-        background: 'var(--paper)',
-        borderRadius: 8,
-        width: '100%',
-        maxWidth: 740,
-        maxHeight: '92vh',
-        overflow: 'auto',
-        border: '1px solid var(--rule)',
+        background: 'var(--paper)', borderRadius: 8, width: '100%', maxWidth: 760,
+        maxHeight: '92vh', overflow: 'auto', border: '1px solid var(--rule)',
         boxShadow: '0 20px 60px rgba(26,20,16,0.2)',
       }}>
         {/* Header */}
@@ -107,20 +126,14 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
               {STATUS_LABELS[book.reading_status]}
             </span>
             <div style={{ display: 'flex', gap: 8 }}>
-              {!editing && (
-                <button className="btn-ghost" onClick={() => setEditing(true)} style={{ fontSize: 12 }}>
-                  ✏ Edit
-                </button>
+              {isOwner && !editing && (
+                <button className="btn-ghost" onClick={() => setEditing(true)} style={{ fontSize: 12 }}>✏ Edit</button>
               )}
               <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--ink-faint)', padding: '0 4px', lineHeight: 1 }}>×</button>
             </div>
           </div>
-          <h2 className="font-display" style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 700, lineHeight: 1.25 }}>
-            {book.title}
-          </h2>
-          <p style={{ margin: '0 0 10px', fontSize: 14, color: 'var(--ink-faint)', fontStyle: 'italic' }}>
-            by {book.author || 'Anonymous'}
-          </p>
+          <h2 className="font-display" style={{ margin: '0 0 4px', fontSize: 24, fontWeight: 700, lineHeight: 1.25 }}>{book.title}</h2>
+          <p style={{ margin: '0 0 10px', fontSize: 14, color: 'var(--ink-faint)', fontStyle: 'italic' }}>by {book.author || 'Anonymous'}</p>
           <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
             {book.fandom?.map(f => <span key={f} className="tag-pill fandom">{f}</span>)}
           </div>
@@ -132,16 +145,11 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
             {book.summary && (
               <div style={{ marginBottom: 20 }}>
                 <p style={{ fontSize: 12, fontFamily: 'DM Mono', color: 'var(--ink-faint)', letterSpacing: '0.08em', marginBottom: 6 }}>SUMMARY</p>
-                <p style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--ink-soft)', margin: 0, fontStyle: 'italic' }}>
-                  {book.summary}
-                </p>
+                <p style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--ink-soft)', margin: 0, fontStyle: 'italic' }}>{book.summary}</p>
               </div>
             )}
-
             <StatRow label="Rating" value={<span style={{ color: '#9b2020' }}>{book.ao3_rating || 'Not Rated'}</span>} />
-            <StatRow label="Status" value={
-              <span style={{ color: book.status === 'Complete' ? '#2d5030' : '#7a5c00' }}>{book.status || '—'}</span>
-            } />
+            <StatRow label="Status" value={<span style={{ color: book.status === 'Complete' ? '#2d5030' : '#7a5c00' }}>{book.status || '—'}</span>} />
             <StatRow label="Words" value={wordCountDisplay} />
             <StatRow label="Chapters" value={book.chapter_count || '—'} />
             <StatRow label="Language" value={book.language || '—'} />
@@ -151,7 +159,6 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
             <StatRow label="Hits" value={book.hits?.toLocaleString() ?? '—'} />
             <StatRow label="Bookmarks" value={book.bookmarks?.toLocaleString() ?? '—'} />
 
-            {/* Character / relationship tags */}
             {book.characters && book.characters.length > 0 && (
               <div style={{ marginTop: 16 }}>
                 <p style={{ fontSize: 12, fontFamily: 'DM Mono', color: 'var(--ink-faint)', letterSpacing: '0.08em', marginBottom: 6 }}>CHARACTERS</p>
@@ -177,21 +184,44 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
               </div>
             )}
 
-            <a
-              href={book.ao3_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ display: 'inline-block', marginTop: 16, fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}
-            >
+            <a href={book.ao3_url} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-block', marginTop: 16, fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>
               Read on AO3 →
             </a>
+
+            {/* Friends' ratings */}
+            {otherRatings.length > 0 && (
+              <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--rule)' }}>
+                <p style={{ fontSize: 12, fontFamily: 'DM Mono', color: 'var(--ink-faint)', letterSpacing: '0.08em', marginBottom: 12 }}>FRIENDS&apos; RATINGS</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {otherRatings.map(r => (
+                    <div key={r.user_id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                      <Avatar username={r.username} displayName={r.display_name} color={r.avatar_color} size={28} />
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500 }}>{r.display_name || r.username}</span>
+                          <MiniStars rating={r.your_rating} />
+                        </div>
+                        {r.notes && (
+                          <p style={{ fontSize: 12, color: 'var(--ink-faint)', margin: '3px 0 0', lineHeight: 1.5, fontStyle: 'italic' }}>
+                            &ldquo;{r.notes.slice(0, 120)}{r.notes.length > 120 ? '…' : ''}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right: Personal fields (view or edit) */}
+          {/* Right: Personal shelf */}
           <div style={{ borderLeft: '1px solid var(--rule)', paddingLeft: 24 }}>
-            <p style={{ fontSize: 12, fontFamily: 'DM Mono', color: 'var(--ink-faint)', letterSpacing: '0.08em', marginBottom: 16 }}>YOUR SHELF</p>
+            <p style={{ fontSize: 12, fontFamily: 'DM Mono', color: 'var(--ink-faint)', letterSpacing: '0.08em', marginBottom: 16 }}>
+              {isOwner ? 'YOUR SHELF' : 'THEIR SHELF'}
+            </p>
 
-            {editing ? (
+            {isOwner && editing ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-soft)', display: 'block', marginBottom: 6 }}>Status</label>
@@ -203,8 +233,11 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
                   <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-soft)', display: 'block', marginBottom: 4 }}>Your Rating</label>
                   <div style={{ display: 'flex', gap: 3 }}>
                     {[1,2,3,4,5].map(i => (
-                      <span key={i} className="star" style={{ fontSize: 22, color: (hoverRating || yourRating) >= i ? 'var(--accent)' : 'var(--rule-dark)' }}
-                        onClick={() => setYourRating(i)} onMouseEnter={() => setHoverRating(i)} onMouseLeave={() => setHoverRating(0)}>★</span>
+                      <span key={i} className="star"
+                        style={{ fontSize: 22, color: (hoverRating || yourRating) >= i ? 'var(--accent)' : 'var(--rule-dark)' }}
+                        onClick={() => setYourRating(i)}
+                        onMouseEnter={() => setHoverRating(i)}
+                        onMouseLeave={() => setHoverRating(0)}>★</span>
                     ))}
                   </div>
                 </div>
@@ -263,25 +296,27 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted }:
                     <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--ink-soft)', margin: 0, whiteSpace: 'pre-wrap' }}>{book.notes}</p>
                   </div>
                 )}
-
-                {/* Delete */}
-                <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--rule)' }}>
-                  {confirmDelete ? (
-                    <div>
-                      <p style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>Remove this work from your shelf?</p>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button onClick={handleDelete} disabled={deleting} style={{ background: '#9b2020', color: 'white', border: 'none', borderRadius: 4, padding: '6px 14px', fontSize: 12, cursor: 'pointer' }}>
-                          {deleting ? 'Removing…' : 'Yes, Remove'}
-                        </button>
-                        <button className="btn-ghost" onClick={() => setConfirmDelete(false)} style={{ fontSize: 12 }}>Cancel</button>
+                {isOwner && (
+                  <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--rule)' }}>
+                    {confirmDelete ? (
+                      <div>
+                        <p style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 8 }}>Remove this work from your shelf?</p>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={handleDelete} disabled={deleting}
+                            style={{ background: '#9b2020', color: 'white', border: 'none', borderRadius: 4, padding: '6px 14px', fontSize: 12, cursor: 'pointer' }}>
+                            {deleting ? 'Removing…' : 'Yes, Remove'}
+                          </button>
+                          <button className="btn-ghost" onClick={() => setConfirmDelete(false)} style={{ fontSize: 12 }}>Cancel</button>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <button onClick={() => setConfirmDelete(true)} style={{ background: 'none', border: 'none', color: 'var(--ink-faint)', fontSize: 12, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
-                      Remove from shelf
-                    </button>
-                  )}
-                </div>
+                    ) : (
+                      <button onClick={() => setConfirmDelete(true)}
+                        style={{ background: 'none', border: 'none', color: 'var(--ink-faint)', fontSize: 12, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                        Remove from shelf
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

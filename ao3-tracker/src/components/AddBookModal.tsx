@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Book, ScrapedWork, ReadingStatus } from '@/lib/supabase'
+import { authFetch } from '@/lib/api'
 
 interface Props {
   onClose: () => void
@@ -57,7 +58,7 @@ export default function AddBookModal({ onClose, onAdded }: Props) {
     setSaveError(null)
     const yourTags = yourTagsInput.split(',').map(s => s.trim()).filter(Boolean)
     try {
-      const res = await fetch('/api/books', {
+      const res = await authFetch('/api/books', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
