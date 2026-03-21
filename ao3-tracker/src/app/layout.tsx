@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Fic Shelf — AO3 Reading Tracker',
+  title: 'The Vanishing Cabinet — AO3 Reading Tracker',
   description: 'Track fanfiction you read with friends',
 }
 

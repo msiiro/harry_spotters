@@ -84,7 +84,7 @@ export default function Home() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 0 12px' }}>
             <div>
               <h1 className="font-display" style={{ fontSize: 28, fontWeight: 700, color: 'var(--ink)', margin: 0, letterSpacing: '-0.02em' }}>
-                Fic Shelf
+                The Vanishing Cabinet
               </h1>
               <p style={{ fontSize: 12, color: 'var(--ink-faint)', margin: '2px 0 0', fontFamily: 'DM Mono', letterSpacing: '0.05em' }}>
                 AO3 READING TRACKER
