@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
-export const revalidate = 300 // re-fetch at most every 5 minutes
+export const revalidate = 300
 
-// GET /api/tags
-// Returns a sorted list of all unique personal tags used across all books.
-// Used to power the TagInput autocomplete.
 export async function GET() {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const { data, error } = await supabase
-    .rpc('get_all_tags')
+    .from('books')
+    .select('your_tags')
+    .not('your_tags', 'is', null)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Flatten all tag arrays, deduplicate, sort
   const tagSet = new Set<string>()
   for (const row of data ?? []) {
     if (Array.isArray(row.your_tags)) {
@@ -20,6 +23,5 @@ export async function GET() {
     }
   }
 
-  const tags = Array.from(tagSet).sort((a, b) => a.localeCompare(b))
-  return NextResponse.json(tags)
+  return NextResponse.json(Array.from(tagSet).sort((a, b) => a.localeCompare(b)))
 }
