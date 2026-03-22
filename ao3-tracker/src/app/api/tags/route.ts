@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+export const revalidate = 300 // re-fetch at most every 5 minutes
+
 // GET /api/tags
 // Returns a sorted list of all unique personal tags used across all books.
 // Used to power the TagInput autocomplete.
 export async function GET() {
   const { data, error } = await supabase
-    .from('books')
-    .select('your_tags')
-    .not('your_tags', 'is', null)
+    .rpc('get_all_tags')
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
