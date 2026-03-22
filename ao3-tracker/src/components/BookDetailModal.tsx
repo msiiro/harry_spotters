@@ -5,6 +5,7 @@ import type { Book, ReadingStatus, WorkRating } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
 import { authFetch } from '@/lib/api'
 import Avatar from './Avatar'
+import TagInput from './TagInput'
 
 interface Props {
   book: Book
@@ -75,9 +76,8 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted, i
   const [editing,        setEditing]        = useState(false)
   const [yourRating,     setYourRating]     = useState(book.your_rating || 0)
   const [hoverRating,    setHoverRating]    = useState(0)
-  const [yourTagsInput,  setYourTagsInput]  = useState((book.your_tags || []).join(', '))
+  const [yourTags,       setYourTags]       = useState<string[]>(book.your_tags || [])
   const [dateRead,       setDateRead]       = useState(book.date_read || '')
-  const [dateStarted,    setDateStarted]    = useState(book.date_started || '')
   const [readingStatus,  setReadingStatus]  = useState<ReadingStatus>(book.reading_status)
   const [notes,          setNotes]          = useState(book.notes || '')
   const [recommendedBy,  setRecommendedBy]  = useState(book.recommended_by || '')
@@ -101,15 +101,14 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted, i
 
   const handleSave = async () => {
     setSaving(true)
-    const yourTags = yourTagsInput.split(',').map(s => s.trim()).filter(Boolean)
+    const yourTagsArr = yourTags
     try {
       const res = await authFetch(`/api/books/${book.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           your_rating:   yourRating || null,
-          your_tags:     yourTags.length ? yourTags : null,
-          date_started:  dateStarted || null,
+          your_tags:     yourTagsArr.length ? yourTagsArr : null,
           date_read:     dateRead || null,
           reading_status: readingStatus,
           notes:         notes || null,
@@ -338,10 +337,6 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted, i
                   </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-muted)', display: 'block', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.06em' }}>DATE STARTED</label>
-                  <input type="date" className="input-field" style={{ fontSize: 13 }} value={dateStarted} onChange={e => setDateStarted(e.target.value)} />
-                </div>
-                <div>
                   <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-muted)', display: 'block', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.06em' }}>DATE READ</label>
                   <input type="date" className="input-field" style={{ fontSize: 13 }} value={dateRead} onChange={e => setDateRead(e.target.value)} />
                 </div>
@@ -351,7 +346,7 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted, i
                 </div>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-muted)', display: 'block', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.06em' }}>YOUR TAGS</label>
-                  <input className="input-field" style={{ fontSize: 13 }} value={yourTagsInput} onChange={e => setYourTagsInput(e.target.value)} placeholder="tag1, tag2…" />
+                  <TagInput value={yourTags} onChange={setYourTags} placeholder="Add tags…" />
                 </div>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-muted)', display: 'block', marginBottom: 6, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.06em' }}>NOTES</label>
@@ -374,10 +369,6 @@ export default function BookDetailModal({ book, onClose, onUpdated, onDeleted, i
                       <span key={i} style={{ fontSize: 20, color: (book.your_rating || 0) >= i ? 'var(--griffindor-gold)' : 'var(--border-dark)' }}>★</span>
                     ))}
                   </div>
-                </div>
-                <div>
-                  <p style={{ fontSize: 11, color: 'var(--ink-ghost)', fontFamily: 'JetBrains Mono, monospace', margin: '0 0 4px' }}>DATE STARTED</p>
-                  <p style={{ fontSize: 14, margin: 0, color: 'var(--ink)' }}>{book.date_started || <span style={{ color: 'var(--ink-ghost)' }}>—</span>}</p>
                 </div>
                 <div>
                   <p style={{ fontSize: 11, color: 'var(--ink-ghost)', fontFamily: 'JetBrains Mono, monospace', margin: '0 0 4px' }}>DATE READ</p>

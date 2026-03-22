@@ -166,7 +166,7 @@ export default function Home() {
                   The Vanishing Cabinet
                 </h1>
                 <p className="font-mono" style={{ fontSize: 9, color: 'var(--griffindor-gold)', margin: '3px 0 0', letterSpacing: '0.18em', opacity: 0.9 }}>
-                  ✦ AO3 READING TRACKER ✦
+                  ✦ FANFIC TRACKER ✦
                 </p>
               </div>
 

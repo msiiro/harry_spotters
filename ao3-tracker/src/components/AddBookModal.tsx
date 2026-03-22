@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import type { Book, ScrapedWork, ReadingStatus } from '@/lib/supabase'
 import { authFetch } from '@/lib/api'
+import TagInput from './TagInput'
 
 interface Props {
   onClose: () => void
@@ -213,7 +214,7 @@ export default function AddBookModal({ onClose, onAdded }: Props) {
   // ── Personal fields (shared) ──────────────────────────────────────────
   const [yourRating,    setYourRating]    = useState(0)
   const [hoverRating,   setHoverRating]   = useState(0)
-  const [yourTagsInput, setYourTagsInput] = useState('')
+  const [yourTags,      setYourTags]      = useState<string[]>([])
   const [dateStarted,   setDateStarted]   = useState('')
   const [dateRead,      setDateRead]      = useState('')
   const [readingStatus, setReadingStatus] = useState<ReadingStatus>('want_to_read')
@@ -306,7 +307,6 @@ export default function AddBookModal({ onClose, onAdded }: Props) {
   const handleSave = async () => {
     setSaving(true)
     setSaveError(null)
-    const yourTags = splitTags(yourTagsInput)
 
     const personalFields = {
       your_rating:    yourRating || null,
@@ -524,7 +524,7 @@ export default function AddBookModal({ onClose, onAdded }: Props) {
                 </div>
               )}
 
-              <PersonalFields readingStatus={readingStatus} setReadingStatus={setReadingStatus} yourRating={yourRating} setYourRating={setYourRating} hoverRating={hoverRating} setHoverRating={setHoverRating} dateStarted={dateStarted} setDateStarted={setDateStarted} dateRead={dateRead} setDateRead={setDateRead} recommendedBy={recommendedBy} setRecommendedBy={setRecommendedBy} yourTagsInput={yourTagsInput} setYourTagsInput={setYourTagsInput} notes={notes} setNotes={setNotes} />
+              <PersonalFields readingStatus={readingStatus} setReadingStatus={setReadingStatus} yourRating={yourRating} setYourRating={setYourRating} hoverRating={hoverRating} setHoverRating={setHoverRating} dateStarted={dateStarted} setDateStarted={setDateStarted} dateRead={dateRead} setDateRead={setDateRead} recommendedBy={recommendedBy} setRecommendedBy={setRecommendedBy} yourTags={yourTags} setYourTags={setYourTags} notes={notes} setNotes={setNotes} />
               {saveError && <p style={{ color: 'var(--griffindor-red)', fontSize: 13, marginTop: 12 }}>⚠ {saveError}</p>}
               <div style={{ display: 'flex', gap: 10, marginTop: 22, justifyContent: 'flex-end' }}>
                 <button className="btn-ghost" onClick={onClose}>Cancel</button>
@@ -652,7 +652,7 @@ export default function AddBookModal({ onClose, onAdded }: Props) {
                     )}
                   </div>
 
-                  <PersonalFields readingStatus={readingStatus} setReadingStatus={setReadingStatus} yourRating={yourRating} setYourRating={setYourRating} hoverRating={hoverRating} setHoverRating={setHoverRating} dateStarted={dateStarted} setDateStarted={setDateStarted} dateRead={dateRead} setDateRead={setDateRead} recommendedBy={recommendedBy} setRecommendedBy={setRecommendedBy} yourTagsInput={yourTagsInput} setYourTagsInput={setYourTagsInput} notes={notes} setNotes={setNotes} />
+                  <PersonalFields readingStatus={readingStatus} setReadingStatus={setReadingStatus} yourRating={yourRating} setYourRating={setYourRating} hoverRating={hoverRating} setHoverRating={setHoverRating} dateStarted={dateStarted} setDateStarted={setDateStarted} dateRead={dateRead} setDateRead={setDateRead} recommendedBy={recommendedBy} setRecommendedBy={setRecommendedBy} yourTags={yourTags} setYourTags={setYourTags} notes={notes} setNotes={setNotes} />
 
                   {saveError && <p style={{ color: 'var(--griffindor-red)', fontSize: 13, marginTop: 12 }}>⚠ {saveError}</p>}
                   <div style={{ display: 'flex', gap: 10, marginTop: 22, justifyContent: 'flex-end' }}>
@@ -685,7 +685,7 @@ export default function AddBookModal({ onClose, onAdded }: Props) {
                 <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Summary</label><textarea className="input-field" value={customSummary} onChange={e => setCustomSummary(e.target.value)} placeholder="Brief description…" rows={3} style={{ resize: 'vertical' }} /></div>
               </div>
               <div style={{ height: 1, background: 'var(--border)', margin: '20px 0' }} />
-              <PersonalFields readingStatus={readingStatus} setReadingStatus={setReadingStatus} yourRating={yourRating} setYourRating={setYourRating} hoverRating={hoverRating} setHoverRating={setHoverRating} dateStarted={dateStarted} setDateStarted={setDateStarted} dateRead={dateRead} setDateRead={setDateRead} recommendedBy={recommendedBy} setRecommendedBy={setRecommendedBy} yourTagsInput={yourTagsInput} setYourTagsInput={setYourTagsInput} notes={notes} setNotes={setNotes} />
+              <PersonalFields readingStatus={readingStatus} setReadingStatus={setReadingStatus} yourRating={yourRating} setYourRating={setYourRating} hoverRating={hoverRating} setHoverRating={setHoverRating} dateStarted={dateStarted} setDateStarted={setDateStarted} dateRead={dateRead} setDateRead={setDateRead} recommendedBy={recommendedBy} setRecommendedBy={setRecommendedBy} yourTags={yourTags} setYourTags={setYourTags} notes={notes} setNotes={setNotes} />
               {saveError && <p style={{ color: 'var(--griffindor-red)', fontSize: 13, marginTop: 12 }}>⚠ {saveError}</p>}
               <div style={{ display: 'flex', gap: 10, marginTop: 22, justifyContent: 'flex-end' }}>
                 <button className="btn-ghost" onClick={onClose}>Cancel</button>
@@ -714,13 +714,13 @@ interface PersonalFieldsProps {
   setDateRead:      (v: string) => void
   recommendedBy:    string
   setRecommendedBy: (v: string) => void
-  yourTagsInput:    string
-  setYourTagsInput: (v: string) => void
+  yourTags:         string[]
+  setYourTags:      (v: string[]) => void
   notes:            string
   setNotes:         (v: string) => void
 }
 
-function PersonalFields({ readingStatus, setReadingStatus, yourRating, setYourRating, hoverRating, setHoverRating, dateStarted, setDateStarted, dateRead, setDateRead, recommendedBy, setRecommendedBy, yourTagsInput, setYourTagsInput, notes, setNotes }: PersonalFieldsProps) {
+function PersonalFields({ readingStatus, setReadingStatus, yourRating, setYourRating, hoverRating, setHoverRating, dateStarted, setDateStarted, dateRead, setDateRead, recommendedBy, setRecommendedBy, yourTags, setYourTags, notes, setNotes }: PersonalFieldsProps) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
       <div style={{ gridColumn: '1 / -1' }}>
@@ -758,9 +758,9 @@ function PersonalFields({ readingStatus, setReadingStatus, yourRating, setYourRa
         <input type="date" className="input-field" value={dateRead} onChange={e => setDateRead(e.target.value)} />
       </div>
 
-      <div>
+      <div style={{ gridColumn: '1 / -1' }}>
         <label style={labelStyle}>Your Tags</label>
-        <input className="input-field" value={yourTagsInput} onChange={e => setYourTagsInput(e.target.value)} placeholder="cozy, slow burn, reread…" />
+        <TagInput value={yourTags} onChange={setYourTags} placeholder="Add tags…" />
       </div>
 
       <div style={{ gridColumn: '1 / -1' }}>
