@@ -87,6 +87,7 @@ export async function POST(request: Request) {
       reading_status:  'want_to_read',
       your_rating:     null,
       your_tags:       null,
+      date_started:    null,
       date_read:       null,
       notes:           null,
       recommended_by:  null,
