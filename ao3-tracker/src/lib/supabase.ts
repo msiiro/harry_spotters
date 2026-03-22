@@ -47,6 +47,7 @@ export interface Book {
   your_rating: number | null
   your_tags: string[] | null
   date_read: string | null
+  date_started: string | null
   reading_status: ReadingStatus
   notes: string | null
   recommended_by: string | null
