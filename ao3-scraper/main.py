@@ -119,7 +119,7 @@ def serialize_work(work: AO3.Work) -> dict:
         "ao3_id": str(work.id),
         "ao3_url": f"https://archiveofourown.org/works/{work.id}",
         "title": work.title or "Unknown Title",
-        "author": ", ".join(str(a) for a in work.authors) if work.authors else "Anonymous",
+        "author": ", ".join(getattr(a, 'username', str(a)) for a in work.authors) if work.authors else "Anonymous",
         "fandom": safe_list(work.fandoms),
         "ao3_rating": work.rating or "Not Rated",
         "warnings": safe_list(work.warnings),
