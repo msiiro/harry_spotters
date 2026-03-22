@@ -18,11 +18,9 @@ export default function AuthPage() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-
     const err = mode === 'login'
       ? await signIn(email, password)
       : await signUp(email, password, username)
-
     if (err) {
       setError(err)
       setLoading(false)
@@ -34,122 +32,200 @@ export default function AuthPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--paper)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 24,
+      position: 'relative',
+      overflow: 'hidden',
     }}>
-      <div style={{ width: '100%', maxWidth: 400 }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 className="font-display" style={{ fontSize: 36, fontWeight: 900, margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-            Fic Shelf
+
+      {/* Ambient glow spots — subtle on light bg */}
+      <div style={{
+        position: 'fixed',
+        top: '20%', left: '15%',
+        width: 500, height: 500,
+        background: 'radial-gradient(circle, rgba(184,132,10,0.07) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'fixed',
+        bottom: '20%', right: '15%',
+        width: 400, height: 400,
+        background: 'radial-gradient(circle, rgba(38,92,58,0.06) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ width: '100%', maxWidth: 400, position: 'relative', zIndex: 1 }}>
+
+        {/* Masthead */}
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+          {/* Decorative top rule */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            marginBottom: 20,
+            justifyContent: 'center',
+          }}>
+            <div style={{ height: 1, width: 48, background: 'linear-gradient(90deg, transparent, var(--griffindor-gold))' }} />
+            <span style={{ color: 'var(--griffindor-gold)', fontSize: 12, opacity: 0.7 }}>✦</span>
+            <div style={{ height: 1, width: 48, background: 'linear-gradient(90deg, var(--griffindor-gold), transparent)' }} />
+          </div>
+
+          <h1 className="font-display" style={{
+            fontSize: 'clamp(32px, 8vw, 44px)',
+            fontWeight: 600,
+            margin: '0 0 6px',
+            letterSpacing: '-0.02em',
+            color: 'var(--ink)',
+            lineHeight: 1.1,
+          }}>
+            The Vanishing<br />Cabinet
           </h1>
-          <p style={{ color: 'var(--ink-faint)', fontSize: 13, fontFamily: 'DM Mono', letterSpacing: '0.08em' }}>
-            AO3 READING TRACKER
+          <p className="font-mono" style={{
+            color: 'var(--griffindor-gold)',
+            fontSize: 10,
+            letterSpacing: '0.2em',
+            opacity: 0.75,
+            marginTop: 10,
+          }}>
+            ✦ AO3 READING TRACKER ✦
           </p>
         </div>
 
-        {/* Card */}
+        {/* Auth card */}
         <div style={{
-          background: 'white',
-          border: '1px solid var(--rule)',
-          borderRadius: 8,
-          padding: '32px 32px 28px',
-          boxShadow: '0 4px 24px rgba(26,20,16,0.07)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 4,
+          overflow: 'hidden',
+          boxShadow: 'var(--shadow-lg)',
         }}>
-          {/* Tab switcher */}
-          <div style={{ display: 'flex', marginBottom: 28, borderBottom: '1px solid var(--rule)' }}>
-            {(['login', 'signup'] as const).map(m => (
-              <button
-                key={m}
-                onClick={() => { setMode(m); setError(null) }}
-                style={{
-                  flex: 1,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '10px 0',
-                  fontSize: 14,
-                  fontFamily: 'DM Sans',
-                  fontWeight: mode === m ? 600 : 400,
-                  color: mode === m ? 'var(--accent)' : 'var(--ink-faint)',
-                  borderBottom: mode === m ? '2px solid var(--accent)' : '2px solid transparent',
-                  marginBottom: -1,
-                  transition: 'all 0.15s',
-                }}
-              >
-                {m === 'login' ? 'Sign In' : 'Create Account'}
-              </button>
-            ))}
-          </div>
 
-          <form onSubmit={handle}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {mode === 'signup' && (
+          {/* Slytherin/Gryffindor house bar */}
+          <div style={{
+            height: 3,
+            background: 'linear-gradient(90deg, var(--griffindor-crimson) 0%, var(--griffindor-gold) 50%, var(--slytherin-emerald) 100%)',
+          }} />
+
+          <div style={{ padding: '28px 28px 24px' }}>
+            {/* Tab switcher */}
+            <div style={{ display: 'flex', marginBottom: 24, borderBottom: '1px solid var(--border)' }}>
+              {(['login', 'signup'] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => { setMode(m); setError(null) }}
+                  style={{
+                    flex: 1,
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '8px 0 12px',
+                    fontFamily: 'Cormorant Garamond, serif',
+                    fontSize: 17,
+                    fontWeight: mode === m ? 600 : 400,
+                    fontStyle: mode === m ? 'normal' : 'italic',
+                    color: mode === m ? 'var(--griffindor-red)' : 'var(--ink-muted)',
+                    borderBottom: mode === m ? '2px solid var(--griffindor-gold)' : '2px solid transparent',
+                    marginBottom: -1,
+                    transition: 'all 0.2s',
+                    letterSpacing: '0.01em',
+                  }}
+                >
+                  {m === 'login' ? 'Sign In' : 'Create Account'}
+                </button>
+              ))}
+            </div>
+
+            <form onSubmit={handle}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {mode === 'signup' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.08em', marginBottom: 6, color: 'var(--ink-muted)' }}>
+                      USERNAME
+                    </label>
+                    <input
+                      className="input-field"
+                      value={username}
+                      onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                      placeholder="your_username"
+                      required
+                      autoComplete="username"
+                    />
+                  </div>
+                )}
+
                 <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6, color: 'var(--ink-soft)' }}>
-                    Username
+                  <label style={{ display: 'block', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.08em', marginBottom: 6, color: 'var(--ink-muted)' }}>
+                    EMAIL
                   </label>
                   <input
                     className="input-field"
-                    value={username}
-                    onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
-                    placeholder="your_username"
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="you@example.com"
                     required
-                    autoComplete="username"
+                    autoComplete="email"
                   />
                 </div>
-              )}
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6, color: 'var(--ink-soft)' }}>
-                  Email
-                </label>
-                <input
-                  className="input-field"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  autoComplete="email"
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, marginBottom: 6, color: 'var(--ink-soft)' }}>
-                  Password
-                </label>
-                <input
-                  className="input-field"
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder={mode === 'signup' ? 'At least 6 characters' : '••••••••'}
-                  required
-                  minLength={6}
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                />
-              </div>
 
-              {error && (
-                <p style={{ color: 'var(--accent)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
-              )}
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontFamily: 'JetBrains Mono, monospace', letterSpacing: '0.08em', marginBottom: 6, color: 'var(--ink-muted)' }}>
+                    PASSWORD
+                  </label>
+                  <input
+                    className="input-field"
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder={mode === 'signup' ? 'At least 6 characters' : '••••••••'}
+                    required
+                    minLength={6}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  />
+                </div>
 
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={loading}
-                style={{ marginTop: 4, width: '100%', padding: '11px 0', fontSize: 14 }}
-              >
-                {loading ? '…' : mode === 'login' ? 'Sign In' : 'Create Account'}
-              </button>
-            </div>
-          </form>
+                {error && (
+                  <p style={{
+                    color: 'var(--griffindor-red)',
+                    fontSize: 13,
+                    margin: 0,
+                    fontFamily: 'Crimson Pro, serif',
+                    padding: '8px 10px',
+                    background: 'rgba(139,26,26,0.08)',
+                    borderRadius: 3,
+                    border: '1px solid rgba(139,26,26,0.2)',
+                  }}>
+                    ⚠ {error}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={loading}
+                  style={{ marginTop: 6, width: '100%', padding: '11px 0', fontSize: 12, letterSpacing: '0.12em' }}
+                >
+                  {loading ? '…' : mode === 'login' ? 'ENTER THE CABINET' : 'CREATE ACCOUNT'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--ink-faint)' }}>
-          A reading tracker for AO3 works
+        {/* Footer caption */}
+        <p style={{
+          textAlign: 'center',
+          marginTop: 24,
+          fontSize: 12,
+          color: 'var(--ink-ghost)',
+          fontFamily: 'Crimson Pro, serif',
+          fontStyle: 'italic',
+          opacity: 0.7,
+        }}>
+          A reading tracker for the bibliophile in you
         </p>
       </div>
     </div>
