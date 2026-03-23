@@ -47,25 +47,6 @@ export default function BookCard({ book, onClick, showCopyHint = false }: Props)
       onClick={onClick}
       style={{ padding: '18px 20px', cursor: 'pointer', position: 'relative' }}
     >
-      {/* Copy hint badge */}
-      {showCopyHint && (
-        <div style={{
-          position:      'absolute',
-          top:           10,
-          right:         10,
-          padding:       '2px 8px',
-          borderRadius:  20,
-          background:    '#fdf8ee',
-          border:        '1px solid var(--griffindor-gold)',
-          fontSize:      10,
-          fontFamily:    'JetBrains Mono, monospace',
-          color:         'var(--griffindor-gold)',
-          letterSpacing: '0.06em',
-          pointerEvents: 'none',
-        }}>
-          + add
-        </div>
-      )}
 
       {/* Top strip: status + AO3 rating */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -84,7 +65,6 @@ export default function BookCard({ book, onClick, showCopyHint = false }: Props)
         color:        'var(--ink)',
         margin:       '0 0 4px',
         lineHeight:   1.3,
-        paddingRight: showCopyHint ? 52 : 0,
         display:      '-webkit-box',
         WebkitLineClamp: 2,
         WebkitBoxOrient: 'vertical',
