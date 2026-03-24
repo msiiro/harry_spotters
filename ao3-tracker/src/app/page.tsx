@@ -28,6 +28,35 @@ interface Profile {
   avatar_color: string | null
 }
 
+function SettingRow({ label, active, onToggle }: { label: string; active: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        width: '100%', padding: '8px 16px',
+        background: 'none', border: 'none', cursor: 'pointer',
+        fontSize: 13, color: 'var(--ink-soft)', fontFamily: 'Crimson Pro, serif',
+      }}
+    >
+      <span>{label}</span>
+      <span style={{
+        display: 'inline-flex', alignItems: 'center',
+        width: 32, height: 18, borderRadius: 9,
+        background: active ? 'var(--griffindor-crimson)' : 'var(--border-dark)',
+        transition: 'background 0.2s', flexShrink: 0, position: 'relative',
+      }}>
+        <span style={{
+          position: 'absolute', left: active ? 16 : 2,
+          width: 14, height: 14, borderRadius: '50%',
+          background: 'white', transition: 'left 0.2s',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+        }} />
+      </span>
+    </button>
+  )
+}
+
 export default function Home() {
   const { user, profile, loading: authLoading, signOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
@@ -72,8 +101,6 @@ export default function Home() {
       const params = new URLSearchParams()
       if (activeStatus !== 'all') params.set('status', activeStatus)
       if (search) params.set('search', search)
-      // null filterUserId = "My Shelf" (current user)
-      // set filterUserId = a specific other user
       params.set('user_id', filterUserId ?? user.id)
 
       const res  = await authFetch(`/api/books?${params}`)
@@ -134,9 +161,9 @@ export default function Home() {
     : n >= 1_000   ? `${(n / 1_000).toFixed(0)}K`
     : String(n)
 
-  const filterProfile  = profiles.find(p => p.id === filterUserId)
-  const otherProfiles  = profiles.filter(p => p.id !== user?.id)
-  const isMyShelf      = filterUserId === null
+  const filterProfile = profiles.find(p => p.id === filterUserId)
+  const otherProfiles = profiles.filter(p => p.id !== user?.id)
+  const isMyShelf     = filterUserId === null
 
   if (authLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -154,7 +181,6 @@ export default function Home() {
       <header className="site-header">
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
 
-          {/* Top row: logo + stats + actions */}
           <div className="header-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0 10px' }}>
             <div className="header-top-row" style={{ display: 'contents' }}>
 
@@ -191,37 +217,13 @@ export default function Home() {
 
                 <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Work</button>
 
-                <button
-                  className="theme-toggle"
-                  onClick={toggleTheme}
-                  title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-                >
-                  {theme === 'light' ? '🌙' : '☀️'}
-                </button>
-
-                <button
-                  className="theme-toggle"
-                  onClick={() => setWandEnabled(v => !v)}
-                  title={wandEnabled ? 'Disable wand cursor' : 'Enable wand cursor'}
-                >
-                  🪄
-                </button>
-
+                {/* Avatar — opens user menu with settings inside */}
                 <div style={{ position: 'relative' }}>
                   <button onClick={() => setShowUserMenu(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                     <Avatar username={profile?.username || '?'} displayName={profile?.display_name} color={profile?.avatar_color} size={32} />
                   </button>
-                  {showUserMenu && (
-                    <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, boxShadow: 'var(--shadow-lg)', minWidth: 160, zIndex: 60 }}>
-                      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
-                        <p className="font-display" style={{ margin: 0, fontSize: 15, color: 'var(--ink)', fontWeight: 600 }}>{profile?.display_name || profile?.username}</p>
-                        <p className="font-mono" style={{ margin: '2px 0 0', fontSize: 10, color: 'var(--ink-ghost)' }}>@{profile?.username}</p>
-                      </div>
-                      <button onClick={handleSignOut} style={{ display: 'block', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, color: 'var(--ink-soft)', fontFamily: 'Crimson Pro, serif' }}>
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
+
+
                 </div>
               </div>
             </div>
@@ -229,12 +231,11 @@ export default function Home() {
 
           <div className="gold-rule" />
 
-          {/* ── Nav row: person filter + status tabs + search ── */}
+          {/* Nav row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 2 }}>
             <div className="nav-row" style={{ flex: 1, overflowX: 'auto' }}>
               <div className="nav-inner" style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
 
-                {/* Person selector: My Shelf | Person 1 | Person 2 … */}
                 <button
                   onClick={() => setFilterUserId(null)}
                   className={`person-tab${isMyShelf ? ' active' : ''}`}
@@ -254,10 +255,8 @@ export default function Home() {
                   </button>
                 ))}
 
-                {/* Divider */}
                 <div style={{ width: 1, height: 18, background: 'var(--border)', margin: '0 6px', flexShrink: 0 }} />
 
-                {/* Status tabs */}
                 {STATUS_TABS.map(tab => (
                   <button key={tab.key} onClick={() => setActiveStatus(tab.key)} className={`nav-tab${activeStatus === tab.key ? ' active' : ''}`}>
                     {tab.label}
@@ -283,7 +282,6 @@ export default function Home() {
       <div className="main-layout" style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 20px', display: 'grid', gridTemplateColumns: '1fr 280px', gap: 32 }}>
         <main>
 
-          {/* Viewing someone else's shelf — banner */}
           {filterProfile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, padding: '10px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, borderLeft: '3px solid var(--griffindor-gold)' }}>
               <Avatar username={filterProfile.username} displayName={filterProfile.display_name} color={filterProfile.avatar_color ?? undefined} size={28} />
@@ -343,7 +341,41 @@ export default function Home() {
         </aside>
       </div>
 
-      {showUserMenu && <div style={{ position: 'fixed', inset: 0, zIndex: 55 }} onClick={() => setShowUserMenu(false)} />}
+      {/* User menu — rendered at root level to escape header stacking context */}
+      {showUserMenu && (
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 98 }}
+            onClick={() => setShowUserMenu(false)}
+          />
+          <div
+            style={{
+              position: 'fixed', top: 60, right: 24,
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 4, boxShadow: 'var(--shadow-lg)',
+              minWidth: 210, zIndex: 99,
+            }}
+          >
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+              <p className="font-display" style={{ margin: 0, fontSize: 15, color: 'var(--ink)', fontWeight: 600 }}>{profile?.display_name || profile?.username}</p>
+              <p className="font-mono" style={{ margin: '2px 0 0', fontSize: 10, color: 'var(--ink-ghost)' }}>@{profile?.username}</p>
+            </div>
+            <div style={{ padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+              <p className="font-mono" style={{ fontSize: 9, color: 'var(--ink-ghost)', letterSpacing: '0.12em', padding: '4px 16px 2px', margin: 0 }}>
+                SETTINGS
+              </p>
+              <SettingRow label="Dark mode"   active={theme === 'dark'} onToggle={toggleTheme} />
+              <SettingRow label="Wand cursor" active={wandEnabled}      onToggle={() => setWandEnabled(v => !v)} />
+            </div>
+            <button
+              onClick={handleSignOut}
+              style={{ display: 'block', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, color: 'var(--ink-soft)', fontFamily: 'Crimson Pro, serif' }}
+            >
+              Sign Out
+            </button>
+          </div>
+        </>
+      )}
 
       {showAdd && <AddBookModal onClose={() => setShowAdd(false)} onAdded={handleBookAdded} />}
 
@@ -362,7 +394,7 @@ export default function Home() {
 
       <style>{`
         ${wandEnabled ? '* { cursor: none !important; }' : ''}
-        /* Person selector tabs — same row as nav tabs */
+
         .person-tab {
           display: inline-flex;
           align-items: center;
@@ -386,23 +418,6 @@ export default function Home() {
         .person-tab.active {
           color: var(--griffindor-crimson);
           border-bottom-color: var(--griffindor-gold);
-        }
-
-        .theme-toggle {
-          background: var(--surface-tinted);
-          border: 1px solid var(--border);
-          border-radius: 3px;
-          padding: 5px 9px;
-          font-size: 15px;
-          cursor: pointer;
-          transition: all 0.2s;
-          line-height: 1;
-          display: flex;
-          align-items: center;
-        }
-        .theme-toggle:hover {
-          border-color: var(--accent-gold);
-          background: var(--surface);
         }
 
         @media (max-width: 768px) {
