@@ -11,6 +11,7 @@ import AddBookModal from '@/components/AddBookModal'
 import BookDetailModal from '@/components/BookDetailModal'
 import ActivityFeed from '@/components/ActivityFeed'
 import Avatar from '@/components/Avatar'
+import WandCursor from '@/components/WandCursor'
 
 const STATUS_TABS = [
   { key: 'all',          label: 'All' },
@@ -43,6 +44,7 @@ export default function Home() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobileSearch, setShowMobileSearch] = useState(false)
+  const [wandEnabled, setWandEnabled]   = useState(false)
   const [error, setError]               = useState<string | null>(null)
 
   useEffect(() => {
@@ -197,6 +199,14 @@ export default function Home() {
                   {theme === 'light' ? '🌙' : '☀️'}
                 </button>
 
+                <button
+                  className="theme-toggle"
+                  onClick={() => setWandEnabled(v => !v)}
+                  title={wandEnabled ? 'Disable wand cursor' : 'Enable wand cursor'}
+                >
+                  🪄
+                </button>
+
                 <div style={{ position: 'relative' }}>
                   <button onClick={() => setShowUserMenu(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                     <Avatar username={profile?.username || '?'} displayName={profile?.display_name} color={profile?.avatar_color} size={32} />
@@ -348,7 +358,10 @@ export default function Home() {
         />
       )}
 
+      <WandCursor enabled={wandEnabled} />
+
       <style>{`
+        ${wandEnabled ? '* { cursor: none !important; }' : ''}
         /* Person selector tabs — same row as nav tabs */
         .person-tab {
           display: inline-flex;
