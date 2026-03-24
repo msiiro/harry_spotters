@@ -78,6 +78,7 @@ body {
       rgba(160,140,100,0.03) 80px,
       rgba(160,140,100,0.03) 81px
     );
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ─── Typography ─── */
@@ -389,6 +390,24 @@ body {
   background: var(--border);
 }
 
+/* ─── Theme toggle ─── */
+.theme-toggle {
+  background: var(--surface-tinted);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 9px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+.theme-toggle:hover {
+  border-color: var(--accent-gold);
+  background: var(--surface);
+}
+
 /* ─── Mobile responsive ─── */
 @media (max-width: 768px) {
   body { font-size: 15px; }
@@ -480,5 +499,131 @@ body {
   .btn-primary {
     padding: 7px 12px;
     font-size: 10px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DARK MODE — Slytherin: obsidian, emerald, silver
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --page:           #0a100d;
+  --surface:        #0f1a14;
+  --surface-warm:   #111f17;
+  --surface-tinted: #14231a;
+  --parchment:      #162a1f;
+  --parchment-deep: #1a3025;
+
+  --ink:            #ddeae0;
+  --ink-soft:       #b0ccb8;
+  --ink-muted:      #7a9e86;
+  --ink-ghost:      #4a6e58;
+
+  --griffindor-crimson: #52b788;
+  --griffindor-red:     #3d8c5c;
+  --griffindor-gold:    #a8c5a0;
+  --griffindor-amber:   #c0d8b0;
+
+  --accent:         #52b788;
+  --accent-gold:    #a8c5a0;
+  --accent-pale:    #142a1e;
+
+  --border:         #1e3428;
+  --border-warm:    #243d2e;
+  --border-dark:    #2e5040;
+
+  --shadow-sm:      0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md:      0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg:      0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode tag pills — override the hardcoded light colours */
+[data-theme="dark"] .tag-pill.fandom {
+  background: #0e2218;
+  border-color: #1e4430;
+  color: #7ec8a0;
+}
+[data-theme="dark"] .tag-pill.character {
+  background: #1e1414;
+  border-color: #3a2020;
+  color: #c89090;
+}
+[data-theme="dark"] .tag-pill.warning {
+  background: #1e1a0e;
+  border-color: #3a3018;
+  color: #c8b07a;
+}
+[data-theme="dark"] .tag-pill.relationship {
+  background: #0e1820;
+  border-color: #1a2e3a;
+  color: #7aaac0;
+}
+
+/* Dark mode status badges */
+[data-theme="dark"] .status-want     { background: #0e2218; border-color: #1e4430; color: #7ec8a0; }
+[data-theme="dark"] .status-reading  { background: #1e1a08; border-color: #3a3018; color: #c8b07a; }
+[data-theme="dark"] .status-finished { background: #1a2e1a; border-color: #2a4a2a; color: #90c890; }
+[data-theme="dark"] .status-dropped  { background: #1a1a1a; border-color: #2a2a2a; color: #666; }
+
+/* Dark mode body texture — subtle dungeon stone instead of parchment lines */
+[data-theme="dark"] body {
+  background-image:
+    repeating-linear-gradient(
+      92deg,
+      transparent,
+      transparent 240px,
+      rgba(80,140,100,0.03) 240px,
+      rgba(80,140,100,0.03) 241px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent,
+      transparent 80px,
+      rgba(60,100,80,0.02) 80px,
+      rgba(60,100,80,0.02) 81px
+    );
+}
+
+/* Dark mode card accent stripe — switches to emerald/silver */
+[data-theme="dark"] .book-card::before {
+  background: linear-gradient(180deg, #52b788, #a8c5a0);
+}
+
+/* Dark mode modal backdrop */
+[data-theme="dark"] .modal-backdrop {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* Dark mode book card hover */
+[data-theme="dark"] .book-card:hover {
+  border-color: var(--border-warm);
+  box-shadow: 0 4px 20px rgba(82, 183, 136, 0.1);
+}
+
+/* Respect OS dark preference when no explicit toggle set */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page:           #0a100d;
+    --surface:        #0f1a14;
+    --surface-warm:   #111f17;
+    --surface-tinted: #14231a;
+    --parchment:      #162a1f;
+    --parchment-deep: #1a3025;
+    --ink:            #ddeae0;
+    --ink-soft:       #b0ccb8;
+    --ink-muted:      #7a9e86;
+    --ink-ghost:      #4a6e58;
+    --griffindor-crimson: #52b788;
+    --griffindor-red:     #3d8c5c;
+    --griffindor-gold:    #a8c5a0;
+    --griffindor-amber:   #c0d8b0;
+    --accent:         #52b788;
+    --accent-gold:    #a8c5a0;
+    --accent-pale:    #142a1e;
+    --border:         #1e3428;
+    --border-warm:    #243d2e;
+    --border-dark:    #2e5040;
+    --shadow-sm:      0 1px 4px rgba(0, 0, 0, 0.3);
+    --shadow-md:      0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg:      0 12px 40px rgba(0, 0, 0, 0.5);
   }
 }

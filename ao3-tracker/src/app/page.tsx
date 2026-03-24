@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Book } from '@/lib/supabase'
 import { useAuth } from '@/lib/auth'
+import { useTheme } from '@/lib/theme'
 import { authFetch } from '@/lib/api'
 import BookCard from '@/components/BookCard'
 import AddBookModal from '@/components/AddBookModal'
@@ -30,6 +31,7 @@ interface Profile {
 
 export default function Home() {
   const { user, profile, loading: authLoading, signOut } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const router = useRouter()
 
   const [books, setBooks]               = useState<Book[]>([])
@@ -138,8 +140,8 @@ export default function Home() {
     : n >= 1_000   ? `${(n / 1_000).toFixed(0)}K`
     : String(n)
 
-  const filterProfile   = profiles.find(p => p.id === filterUserId)
-  const otherProfiles   = profiles.filter(p => p.id !== user?.id)
+  const filterProfile = profiles.find(p => p.id === filterUserId)
+  const otherProfiles = profiles.filter(p => p.id !== user?.id)
 
   if (authLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -193,6 +195,15 @@ export default function Home() {
                 </button>
 
                 <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Work</button>
+
+                {/* Theme toggle */}
+                <button
+                  className="theme-toggle"
+                  onClick={toggleTheme}
+                  title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+                >
+                  {theme === 'light' ? '🌙' : '☀️'}
+                </button>
 
                 <div style={{ position: 'relative' }}>
                   <button onClick={() => setShowUserMenu(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
@@ -282,7 +293,7 @@ export default function Home() {
               <Avatar username={filterProfile.username} displayName={filterProfile.display_name} color={filterProfile.avatar_color ?? undefined} size={28} />
               <div style={{ flex: 1 }}>
                 <span className="font-display" style={{ fontSize: 15, color: 'var(--ink)', fontWeight: 600 }}>
-                  {filterProfile.display_name || filterProfile.username}'s shelf
+                  {filterProfile.display_name || filterProfile.username}&apos;s shelf
                 </span>
                 <span className="font-mono" style={{ fontSize: 11, color: 'var(--ink-ghost)', marginLeft: 8 }}>
                   — click any card to add it to yours
@@ -293,7 +304,7 @@ export default function Home() {
           )}
 
           {error && (
-            <div style={{ background: '#faeaea', border: '1px solid #e8c0c0', borderRadius: 4, padding: '12px 16px', marginBottom: 20, color: 'var(--griffindor-red)', fontSize: 14 }}>
+            <div style={{ background: 'var(--accent-pale)', border: '1px solid var(--accent-soft)', borderRadius: 4, padding: '12px 16px', marginBottom: 20, color: 'var(--accent)', fontSize: 14 }}>
               ⚠ {error}
             </div>
           )}
@@ -372,13 +383,28 @@ export default function Home() {
         .person-chip:hover {
           border-color: var(--griffindor-gold);
           color: var(--ink);
-          background: #fefcf5;
+          background: var(--accent-pale);
         }
         .person-chip.active {
           border-color: var(--griffindor-gold);
-          background: #fdf8ee;
+          background: var(--accent-pale);
           color: var(--ink);
           box-shadow: 0 1px 4px rgba(184,132,10,0.18);
+        }
+
+        .theme-toggle {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          padding: 5px 9px;
+          font-size: 16px;
+          cursor: pointer;
+          transition: all 0.15s;
+          line-height: 1;
+        }
+        .theme-toggle:hover {
+          border-color: var(--griffindor-gold);
+          background: var(--accent-pale);
         }
 
         @media (max-width: 768px) {
