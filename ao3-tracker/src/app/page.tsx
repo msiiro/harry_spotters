@@ -20,8 +20,6 @@ const STATUS_TABS = [
   { key: 'dropped',      label: 'Dropped' },
 ]
 
-type ShelfView = 'mine' | 'everyone'
-
 interface Profile {
   id: string
   username: string
@@ -39,7 +37,6 @@ export default function Home() {
   const [activeStatus, setActiveStatus] = useState('all')
   const [searchInput, setSearchInput]   = useState('')
   const [search, setSearch]             = useState('')
-  const [shelfView, setShelfView]       = useState<ShelfView>('everyone')
   const [filterUserId, setFilterUserId] = useState<string | null>(null)
   const [profiles, setProfiles]         = useState<Profile[]>([])
   const [showAdd, setShowAdd]           = useState(false)
@@ -57,7 +54,6 @@ export default function Home() {
     return () => clearTimeout(t)
   }, [searchInput])
 
-  // Fetch all profiles for the person-filter strip
   useEffect(() => {
     if (!user) return
     authFetch('/api/users')
@@ -65,11 +61,6 @@ export default function Home() {
       .then(data => { if (Array.isArray(data)) setProfiles(data) })
       .catch(() => {})
   }, [user])
-
-  // Clear person filter when switching to My Shelf
-  useEffect(() => {
-    if (shelfView === 'mine') setFilterUserId(null)
-  }, [shelfView])
 
   const fetchBooks = useCallback(async () => {
     if (!user) return
@@ -79,8 +70,9 @@ export default function Home() {
       const params = new URLSearchParams()
       if (activeStatus !== 'all') params.set('status', activeStatus)
       if (search) params.set('search', search)
-      if (shelfView === 'mine')  params.set('user_id', user.id)
-      else if (filterUserId)     params.set('user_id', filterUserId)
+      // null filterUserId = "My Shelf" (current user)
+      // set filterUserId = a specific other user
+      params.set('user_id', filterUserId ?? user.id)
 
       const res  = await authFetch(`/api/books?${params}`)
       const data = await res.json()
@@ -91,7 +83,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [user, activeStatus, search, shelfView, filterUserId])
+  }, [user, activeStatus, search, filterUserId])
 
   useEffect(() => { fetchBooks() }, [fetchBooks])
 
@@ -140,8 +132,9 @@ export default function Home() {
     : n >= 1_000   ? `${(n / 1_000).toFixed(0)}K`
     : String(n)
 
-  const filterProfile = profiles.find(p => p.id === filterUserId)
-  const otherProfiles = profiles.filter(p => p.id !== user?.id)
+  const filterProfile  = profiles.find(p => p.id === filterUserId)
+  const otherProfiles  = profiles.filter(p => p.id !== user?.id)
+  const isMyShelf      = filterUserId === null
 
   if (authLoading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -196,7 +189,6 @@ export default function Home() {
 
                 <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Work</button>
 
-                {/* Theme toggle */}
                 <button
                   className="theme-toggle"
                   onClick={toggleTheme}
@@ -227,18 +219,35 @@ export default function Home() {
 
           <div className="gold-rule" />
 
-          {/* Nav row */}
+          {/* ── Nav row: person filter + status tabs + search ── */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 2 }}>
             <div className="nav-row" style={{ flex: 1, overflowX: 'auto' }}>
               <div className="nav-inner" style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                <div className="shelf-toggle" style={{ marginRight: 12, flexShrink: 0 }}>
-                  {(['everyone', 'mine'] as ShelfView[]).map(v => (
-                    <button key={v} onClick={() => setShelfView(v)} className={`shelf-btn${shelfView === v ? ' active' : ''}`}>
-                      {v === 'everyone' ? 'All Shelves' : 'My Shelf'}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ width: 1, height: 18, background: 'var(--border)', marginRight: 8, flexShrink: 0 }} />
+
+                {/* Person selector: My Shelf | Person 1 | Person 2 … */}
+                <button
+                  onClick={() => setFilterUserId(null)}
+                  className={`person-tab${isMyShelf ? ' active' : ''}`}
+                >
+                  My Shelf
+                </button>
+
+                {otherProfiles.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => setFilterUserId(prev => prev === p.id ? null : p.id)}
+                    className={`person-tab${filterUserId === p.id ? ' active' : ''}`}
+                    title={p.display_name || p.username}
+                  >
+                    <Avatar username={p.username} displayName={p.display_name} color={p.avatar_color ?? undefined} size={18} />
+                    <span>{p.display_name || p.username}</span>
+                  </button>
+                ))}
+
+                {/* Divider */}
+                <div style={{ width: 1, height: 18, background: 'var(--border)', margin: '0 6px', flexShrink: 0 }} />
+
+                {/* Status tabs */}
                 {STATUS_TABS.map(tab => (
                   <button key={tab.key} onClick={() => setActiveStatus(tab.key)} className={`nav-tab${activeStatus === tab.key ? ' active' : ''}`}>
                     {tab.label}
@@ -246,6 +255,7 @@ export default function Home() {
                 ))}
               </div>
             </div>
+
             <div className="search-input-wrap" style={{ flexShrink: 0 }}>
               <input className="input-field-dark" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Search titles…" style={{ width: 180 }} />
             </div>
@@ -256,30 +266,6 @@ export default function Home() {
               <input className="input-field-dark" value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Search titles…" style={{ width: '100%' }} autoFocus />
             </div>
           )}
-
-          {/* ── Person filter strip (All Shelves only) ── */}
-          {shelfView === 'everyone' && otherProfiles.length > 0 && (
-            <div style={{ padding: '8px 0 10px', display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
-              <button
-                onClick={() => setFilterUserId(null)}
-                className={filterUserId === null ? 'person-chip active' : 'person-chip'}
-              >
-                <span style={{ fontSize: 13 }}>Everyone</span>
-              </button>
-
-              {otherProfiles.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => setFilterUserId(prev => prev === p.id ? null : p.id)}
-                  className={filterUserId === p.id ? 'person-chip active' : 'person-chip'}
-                  title={p.display_name || p.username}
-                >
-                  <Avatar username={p.username} displayName={p.display_name} color={p.avatar_color ?? undefined} size={22} />
-                  <span style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{p.display_name || p.username}</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </header>
 
@@ -287,7 +273,7 @@ export default function Home() {
       <div className="main-layout" style={{ maxWidth: 1200, margin: '0 auto', padding: '28px 20px', display: 'grid', gridTemplateColumns: '1fr 280px', gap: 32 }}>
         <main>
 
-          {/* Active person filter banner */}
+          {/* Viewing someone else's shelf — banner */}
           {filterProfile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, padding: '10px 14px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, borderLeft: '3px solid var(--griffindor-gold)' }}>
               <Avatar username={filterProfile.username} displayName={filterProfile.display_name} color={filterProfile.avatar_color ?? undefined} size={28} />
@@ -304,7 +290,7 @@ export default function Home() {
           )}
 
           {error && (
-            <div style={{ background: 'var(--accent-pale)', border: '1px solid var(--accent-soft)', borderRadius: 4, padding: '12px 16px', marginBottom: 20, color: 'var(--accent)', fontSize: 14 }}>
+            <div style={{ background: 'var(--accent-pale)', border: '1px solid var(--border-warm)', borderRadius: 4, padding: '12px 16px', marginBottom: 20, color: 'var(--accent)', fontSize: 14 }}>
               ⚠ {error}
             </div>
           )}
@@ -316,16 +302,14 @@ export default function Home() {
           ) : books.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px' }}>
               <p className="font-display" style={{ fontSize: 'clamp(22px, 5vw, 30px)', color: 'var(--ink-ghost)', fontStyle: 'italic', marginBottom: 12, fontWeight: 300 }}>
-                {shelfView === 'mine'
+                {isMyShelf
                   ? 'Your shelf awaits…'
-                  : filterProfile
-                    ? `${filterProfile.display_name || filterProfile.username} hasn't added anything yet`
-                    : 'Nothing catalogued yet'}
+                  : `${filterProfile?.display_name || filterProfile?.username} hasn't added anything yet`}
               </p>
               <p style={{ color: 'var(--ink-ghost)', marginBottom: 24, fontSize: 15 }}>
-                {shelfView === 'mine' ? 'Add your first work to begin the collection' : 'Be the first to add a work to the cabinet'}
+                {isMyShelf ? 'Add your first work to begin the collection' : 'Be the first to add a work to the cabinet'}
               </p>
-              {shelfView === 'mine' && <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Work</button>}
+              {isMyShelf && <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Work</button>}
             </div>
           ) : (
             <div className="book-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -365,46 +349,47 @@ export default function Home() {
       )}
 
       <style>{`
-        .person-chip {
+        /* Person selector tabs — same row as nav tabs */
+        .person-tab {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          padding: 4px 12px 4px 6px;
-          border-radius: 20px;
-          border: 1px solid var(--border);
-          background: var(--surface);
-          color: var(--ink-muted);
+          gap: 5px;
+          background: none;
+          border: none;
           cursor: pointer;
-          transition: all 0.15s;
-          font-family: 'Crimson Pro', serif;
+          padding: 10px 12px;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--ink-ghost);
+          border-bottom: 2px solid transparent;
+          margin-bottom: -1px;
+          transition: color 0.2s, border-color 0.2s;
           white-space: nowrap;
           flex-shrink: 0;
         }
-        .person-chip:hover {
-          border-color: var(--griffindor-gold);
-          color: var(--ink);
-          background: var(--accent-pale);
-        }
-        .person-chip.active {
-          border-color: var(--griffindor-gold);
-          background: var(--accent-pale);
-          color: var(--ink);
-          box-shadow: 0 1px 4px rgba(184,132,10,0.18);
+        .person-tab:hover { color: var(--ink-muted); }
+        .person-tab.active {
+          color: var(--griffindor-crimson);
+          border-bottom-color: var(--griffindor-gold);
         }
 
         .theme-toggle {
-          background: var(--surface);
+          background: var(--surface-tinted);
           border: 1px solid var(--border);
-          border-radius: 6px;
+          border-radius: 3px;
           padding: 5px 9px;
-          font-size: 16px;
+          font-size: 15px;
           cursor: pointer;
-          transition: all 0.15s;
+          transition: all 0.2s;
           line-height: 1;
+          display: flex;
+          align-items: center;
         }
         .theme-toggle:hover {
-          border-color: var(--griffindor-gold);
-          background: var(--accent-pale);
+          border-color: var(--accent-gold);
+          background: var(--surface);
         }
 
         @media (max-width: 768px) {

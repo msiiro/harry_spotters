@@ -4,7 +4,7 @@ import { AuthProvider } from '@/lib/auth'
 import { ThemeProvider } from '@/lib/theme'
 
 export const metadata: Metadata = {
-  title: 'Fic Shelf — AO3 Reading Tracker',
+  title: 'The Vanishing Cabinet - Fanfic Tracker',
   description: 'Track fanfiction you read with friends',
 }
 
