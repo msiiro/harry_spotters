@@ -320,16 +320,35 @@ export default function Home() {
               {isMyShelf && <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Work</button>}
             </div>
           ) : (
-            <div className="book-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-              {books.map(book => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  onClick={() => setSelectedBook(book)}
-                  showCopyHint={!!filterUserId && book.user_id !== user.id}
-                />
-              ))}
-            </div>
+            <>
+              {isMyShelf && activeStatus === 'want_to_read' && books.length > 0 && (
+                <div
+                  onClick={() => {
+                    const pick = books[Math.floor(Math.random() * books.length)]
+                    setSelectedBook(pick)
+                  }}
+                  className="book-card"
+                  style={{ padding: '12px 24px', cursor: 'pointer', position: 'relative', marginBottom: 24 }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span>
+                      <span style={{ fontSize: 22, lineHeight: 1, marginRight: 24}}>🔮</span>
+                      <span className="font-display" style={{ fontSize: 15, color: 'var(--ink)', fontWeight: 600 }}>
+                        Not sure what&apos;s next?
+                      </span>
+                      <span  className="font-mono" style={{ fontSize: 11, color: 'var(--ink-ghost)', marginLeft: 8 }}>
+                        — Seek a prophecy to find your next read
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 18 }}>
+                {books.map(book => (
+                  <BookCard key={book.id} book={book} onClick={() => setSelectedBook(book)} />
+                ))}
+              </div>
+            </>
           )}
         </main>
 
